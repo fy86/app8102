@@ -19,12 +19,6 @@ cansendthread::cansendthread(QObject *parent) :
 
 void cansendthread::run()
 {
-    int i32;
-    char *p=(char*)(&i32);
-    char ch;
-    int ret;
-    int len32;
-
     if(!m_bOpen) return;// openCAN first
 
     for(;;){

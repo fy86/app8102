@@ -16,8 +16,56 @@
 vwmain::vwmain(QObject *parent) :
     QObject(parent)
 {
-    cansend();
+    initUDPcanDump();
+
+    //cansend();
 }
+
+void vwmain::initUDPcanDump()
+{
+    m_pUDPcanDump = new QUdpSocket(this);
+    //QHostAddress gAddr=QHostAddress("239.255.43.21");
+
+    m_pUDPcanDump->bind(QHostAddress::Any,57700,QUdpSocket::ShareAddress);
+    //m_pus->joinMulticastGroup(QHostAddress("239.255.43.21"));
+
+    connect(m_pUDPcanDump, SIGNAL(readyRead()),this, SLOT(slotCANdump()));
+
+}
+void vwmain::slotCANdump()
+{
+    struct myst_can CANdata;
+
+    while (m_pUDPcanDump->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(m_pUDPcanDump->pendingDatagramSize());
+        QHostAddress sender;
+        quint16 senderPort;
+
+        m_pUDPcanDump->readDatagram(datagram.data(), datagram.size(),&sender, &senderPort);
+
+        if(datagram.size()==sizeof(struct myst_can)){
+            memcpy(&CANdata,datagram.data(),sizeof(struct myst_can));
+            qDebug("udp.can id:%x len:%d %02x %02x %02x %02x %02x %02x %02x %02x",
+                   CANdata.id32,CANdata.len,
+                   0x0ff & CANdata.data[0],
+                    0x0ff & CANdata.data[1],
+                    0x0ff & CANdata.data[2],
+                    0x0ff & CANdata.data[3],
+                    0x0ff & CANdata.data[4],
+                    0x0ff & CANdata.data[5],
+                    0x0ff & CANdata.data[6],
+                    0x0ff & CANdata.data[7]);
+        }
+    }
+
+}
+
+
+
+
+
+
 int vwmain::getCF(int id32, int len, char *p, struct canfd_frame *cf)
 {
     int i;

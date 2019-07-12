@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       += core network
 
 QT       -= gui
 
@@ -18,9 +18,11 @@ TEMPLATE = app
 SOURCES += main.cpp \
     vwmain.cpp \
     cansendthread.cpp \
-    myst.cpp
+    myst.cpp \
+    canrecvthread.cpp
 
 HEADERS += \
     vwmain.h \
     cansendthread.h \
-    myst.h
+    myst.h \
+    canrecvthread.h
