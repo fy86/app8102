@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include "myst.h"
+
 class vwmain : public QObject
 {
     Q_OBJECT
@@ -13,8 +15,10 @@ public:
     int getCF(int id32,int len,char *p, struct canfd_frame *cf);
 
 signals:
+    void sigCANsend(QByteArray ba,int qn);
 
 public slots:
+    void testSend();
 
 };
 

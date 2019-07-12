@@ -16,7 +16,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    vwmain.cpp
+    vwmain.cpp \
+    cansendthread.cpp \
+    myst.cpp
 
 HEADERS += \
-    vwmain.h
+    vwmain.h \
+    cansendthread.h \
+    myst.h

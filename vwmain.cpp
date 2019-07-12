@@ -91,5 +91,16 @@ int vwmain::cansend()
     return 0;
 }
 
+void vwmain::testSend()
+{
+    QByteArray ba;
+    struct myst_can stCAN;
+    stCAN.id32 = 0x1f112233;
+    stCAN.len = 8;
+    for(int i=0;i<8;i++) stCAN.data[i]=i;
 
+    ba.append((char*)(&stCAN),sizeof(struct myst_can));
+
+    emit sigCANsend(ba,1);
+}
 
