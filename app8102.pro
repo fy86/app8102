@@ -19,10 +19,12 @@ SOURCES += main.cpp \
     vwmain.cpp \
     cansendthread.cpp \
     myst.cpp \
-    canrecvthread.cpp
+    canrecvthread.cpp \
+    parser7.cpp
 
 HEADERS += \
     vwmain.h \
     cansendthread.h \
     myst.h \
-    canrecvthread.h
+    canrecvthread.h \
+    parser7.h

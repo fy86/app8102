@@ -16,9 +16,29 @@
 vwmain::vwmain(QObject *parent) :
     QObject(parent)
 {
+    m_flagDebug = true;
+
+    m_nCountCF = 0;
+
     initUDPcanDump();
 
+    //testDTstring();
+
     //cansend();
+}
+QString vwmain::getDTstring(unsigned secs)
+{
+
+}
+
+void vwmain::testDTstring()
+{
+    // datetime toString
+    QDateTime dt;
+    QLocale e = QLocale::c();
+    dt = QDateTime::currentDateTime();
+    qDebug("date -s %s",e.toString( dt, "MMM yyyy hh:ss").toLatin1().data());
+
 }
 
 void vwmain::initUDPcanDump()
@@ -34,8 +54,6 @@ void vwmain::initUDPcanDump()
 }
 void vwmain::slotCANdump()
 {
-    struct myst_can CANdata;
-
     while (m_pUDPcanDump->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(m_pUDPcanDump->pendingDatagramSize());
@@ -45,23 +63,111 @@ void vwmain::slotCANdump()
         m_pUDPcanDump->readDatagram(datagram.data(), datagram.size(),&sender, &senderPort);
 
         if(datagram.size()==sizeof(struct myst_can)){
-            memcpy(&CANdata,datagram.data(),sizeof(struct myst_can));
-            qDebug("udp.can id:%x len:%d %02x %02x %02x %02x %02x %02x %02x %02x",
-                   CANdata.id32,CANdata.len,
-                   0x0ff & CANdata.data[0],
-                    0x0ff & CANdata.data[1],
-                    0x0ff & CANdata.data[2],
-                    0x0ff & CANdata.data[3],
-                    0x0ff & CANdata.data[4],
-                    0x0ff & CANdata.data[5],
-                    0x0ff & CANdata.data[6],
-                    0x0ff & CANdata.data[7]);
+            m_qCANin.enqueue(datagram);
+            QTimer::singleShot(0,this,SLOT(slotFrameParse()));
         }
     }
 
 }
+bool vwmain::isValidCF(myst_can *pCF)
+{
+    int m = pCF->id32 & 0x0ffff00;
+    if(m == 0x011f000) return true;
+    else return false;
+}
+bool vwmain::isValidQ7(myst_can *pCF)
+{
+    //if(m_flagDebug) qDebug(" func.isValidQ7 ................");
+
+    bool ret=false;
+    int *p32;
+
+    if(!m_p7.m_bHeader){
+        //if(m_flagDebug) qDebug(" func.isValidQ7 ............. no header id32:%x",pCF->id32);
+        if(pCF->id32==0x1911f000){
+            p32=(int*)pCF->data;
+            //if(m_flagDebug) qDebug(" func.isValidQ7 ............. no header %x-%x",p32[0],p32[1]);
+            if(p32[0]==0xf01f4320 && p32[1]==0x8df1ff11){
+                m_p7.m_bHeader = true;
+                ret = true;
+            }
+        }
+    }
+    else{// header received
+        //if(m_flagDebug) qDebug(" func.isValidQ7 ............. header ");
+        if(pCF->id32 == 0x1911f0ff){
+            p32 = (int*)pCF->data;
+            if(p32[0]==0x02ff023c && p32[1]==0xeeeeeeee){
+                m_p7.m_bHeader = false;
+                ret = true;
+                doEcho7();
+            }
+
+        }
+    }
+
+    return ret;
+
+}
+void vwmain::doEcho7()
+{
+    //if(m_flagDebug) qDebug(" func.doEcho7 ................");
+
+    struct myst_can stcan;
+    QByteArray ba,ba1;
+    int *p32;
+    p32=(int*)stcan.data;
+
+    stcan.id32 = 0x19f01100;
+    stcan.len = 8;
+    p32[0]=0x111f4320;
+    p32[1]=0x8df1fff0;
+    ba.clear();
+    ba.append((char*)(&stcan),sizeof(struct myst_can));
+    emit sigCANsend(ba,0);
+
+    stcan.data[0]=0x3c;
+    stcan.data[1]=0x41;
+    stcan.data[2]=0;
+    stcan.data[3]=0;
+    stcan.data[4]=0;
+    stcan.data[5]=m_nCountCF;
+    stcan.data[6]=0x01;
+    stcan.data[7]=0;
+
+    ba1.clear();
+    ba1.append((char*)(&stcan),sizeof(struct myst_can));
+    emit sigCANsend(ba1,0);
+
+}
+
+void vwmain::slotFrameParse()
+{
+    struct myst_can stcan;
+    QByteArray ba;
+    if(m_qCANin.isEmpty()) return;
+
+    ba=m_qCANin.dequeue();
+    memcpy(&stcan,ba.data(),sizeof(struct myst_can));
+    qDebug("udp.can id:%x len:%d %02x %02x %02x %02x %02x %02x %02x %02x",
+           stcan.id32,stcan.len,
+           0x0ff & stcan.data[0],
+            0x0ff & stcan.data[1],
+            0x0ff & stcan.data[2],
+            0x0ff & stcan.data[3],
+            0x0ff & stcan.data[4],
+            0x0ff & stcan.data[5],
+            0x0ff & stcan.data[6],
+            0x0ff & stcan.data[7]);
+
+    if(!isValidCF(&stcan)) return;
+    m_nCountCF++;
+    if(m_flagDebug)  qDebug(" valid CF count: %d",m_nCountCF);
+
+    if(isValidQ7(&stcan)) return;
 
 
+}
 
 
 
