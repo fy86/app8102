@@ -27,7 +27,8 @@ void canrecvthread::run()
     int s;
     int ret;
     struct myst_can CANdata;
-    //QByteArray ba;
+    QByteArray ba;
+    char buf[200];
     int i;
 
     memset(&ifr, 0x0, sizeof(ifr));
@@ -36,7 +37,7 @@ void canrecvthread::run()
     /* open CAN_RAW socket */
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     /* convert interface sting "can0" into interface index */
-    strcpy(ifr.ifr_name, "can1");
+    strcpy(ifr.ifr_name, "can0");
     ioctl(s, SIOCGIFINDEX, &ifr);
     /* setup address for bind */
     addr.can_ifindex = ifr.ifr_ifindex;
@@ -44,9 +45,17 @@ void canrecvthread::run()
     /* bind socket to the can0 interface */
     bind(s, (struct sockaddr *)&addr, sizeof(addr));
     for(;;){
+        //qDebug(" thread can recv .............. thread can recv");
         ret=read(s, &frame, sizeof(frame));
+        //qDebug(" thread can recv .............. thread can recv  ret");
         if(ret>0){
             if(frame.can_dlc<=8){
+
+                sprintf(buf," thread can recv .............. thread can recv  len:%d",frame.can_dlc);
+                ba.clear();
+                ba.append(buf);
+                emit sigUdpLog(ba);
+
                 CANdata.len = frame.can_dlc;
                 CANdata.id32 = 0x1fffffff & frame.can_id;
                 for(i=0;i<CANdata.len;i++) CANdata.data[i]=frame.data[i];

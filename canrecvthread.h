@@ -18,6 +18,7 @@ protected:
     void run();
 
 signals:
+    void sigUdpLog(QByteArray ba);
 
 public slots:
 
