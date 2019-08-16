@@ -14,6 +14,7 @@
 #include "parserfile.h"
 #include "parserfile46.h"
 #include "parserdt.h"
+#include "parserimg.h"
 
 class vwmain : public QObject
 {
@@ -22,10 +23,23 @@ public:
     explicit vwmain(QObject *parent = 0);
     bool m_flagDebug;
 
+    int m_snDev;
+
+    QByteArray m_baEcho7;
+    QByteArray m_baEcho7cmd;
+    bool m_bCMD7;
+
+    void setBAecho7();
+    int m_nCount12;
+    int m_nCount4;
+
     QByteArray m_baFile200;
 
     parserDT m_parseDT;
     bool parseDT(struct myst_can *pCF);
+
+    parserimg m_parseIMG;
+    bool parseIMG(struct myst_can *pCF);
 
     pkt60130 m_pkt60130;
     parserfile m_parserFile;
@@ -72,6 +86,7 @@ signals:
     void sigCANsend(QByteArray ba,int qn);
 
 public slots:
+    void slotCmdInc(int n);
     void slotUDPlog(QByteArray ba);
     void slotFrameParse();
 

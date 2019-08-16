@@ -16,8 +16,15 @@
 vwmain::vwmain(QObject *parent) :
     QObject(parent)
 {
+    m_bCMD7 = false;
+    m_snDev = 1;// first dev
+
+    m_baEcho7.resize(16);
+    m_nCount4=0;
+    m_nCount12=0;
+
     m_bUdpLog = true;
-    m_logAddr=QHostAddress("192.168.101.233");
+    m_logAddr=QHostAddress("192.168.1.99");
     m_logPort = 57702;
 
     m_u8echo200 = 0;
@@ -35,6 +42,53 @@ vwmain::vwmain(QObject *parent) :
     slotUDPlog(QByteArray(" == app2018 ======== "));
 
     connect(&m_parseDT,SIGNAL(sigUdpLog(QByteArray)),this,SLOT(slotUDPlog(QByteArray)));
+
+    connect(&m_parseIMG,SIGNAL(sigCmdInc(int)),this,SLOT(slotCmdInc(int)));
+    connect(&m_parserFile,SIGNAL(sigCmdInc(int)),this,SLOT(slotCmdInc(int)));
+    connect(&m_parserFile46,SIGNAL(sigCmdInc(int)),this,SLOT(slotCmdInc(int)));
+    connect(&m_pkt60130,SIGNAL(sigCmdInc(int)),this,SLOT(slotCmdInc(int)));
+
+    setBAecho7();
+}
+
+void vwmain::setBAecho7()
+{
+    char szFilename[64];
+    int i;
+    char *p;
+    int e32=0;
+    p = m_baEcho7.data();
+    p[0]=(char)0x3c;
+    p[1]=(char)0x41;
+
+    for(i=0;i<16;i++){
+        sprintf(szFilename,"/home/root/qt/Python%02d",i);
+        QByteArray ba(szFilename);
+        QFile f(ba);
+        if(f.exists()){
+            e32 |= (1<<i);
+        }
+    }
+    p[2]=e32;
+    p[3]=e32>>8;
+
+    if(!m_bCMD7){
+        QFile f("/home/root/qt/cmd7");
+        QFile fbak("/home/root/qt/cmd7.bak");
+        if(f.exists()){
+            fbak.remove();
+            if(f.open(QIODevice::ReadOnly)){
+                m_baEcho7cmd.clear();
+                m_baEcho7cmd =f.readAll();
+                f.close();
+
+                f.rename(QString("/home/root/qt/cmd7.bak"));
+                m_bCMD7 = true;
+            }
+        }
+    }
+
+    return;
 }
 
 void vwmain::slotReadFile200()
@@ -55,7 +109,8 @@ void vwmain::slotReadFile200()
 
 QString vwmain::getDTstring(unsigned secs)
 {
-
+    QString str="";
+    return str;
 }
 
 void vwmain::testDTstring()
@@ -174,21 +229,46 @@ void vwmain::doEcho7()
     ba.append((char*)(&stcan),sizeof(struct myst_can));
     emit sigCANsend(ba,0);
 
-    stcan.id32 = 0x19f011ff;
-    stcan.data[0]=0x3c;
-    stcan.data[1]=0x41;
-    stcan.data[2]=0;
-    stcan.data[3]=0;
-    stcan.data[4]=0;
-    stcan.data[5]=m_nCountCF;
-    stcan.data[6]=0x01;
-    stcan.data[7]=0;
+    m_nCount4++;
+    int c = (m_nCount12<<4) | (0x0f & m_nCount4);
+
+    if(m_bCMD7){
+        stcan.id32 = 0x19f011ff;
+        stcan.data[0]=0x3c;
+        stcan.data[1]=m_baEcho7cmd.at(0);
+        stcan.data[2]=m_baEcho7cmd.at(1);
+        stcan.data[3]=m_baEcho7cmd.at(2);
+        stcan.data[4]=m_baEcho7cmd.at(3);
+        stcan.data[5]=m_baEcho7cmd.at(4);
+        stcan.data[6]=m_baEcho7cmd.at(5);
+        stcan.data[7]=m_baEcho7cmd.at(6);
+
+        m_bCMD7 = false;
+    }
+    else{
+        stcan.id32 = 0x19f011ff;
+        stcan.data[0]=0x3c;
+        stcan.data[1]=0x41;
+        stcan.data[2]=m_baEcho7.at(2);
+        stcan.data[3]=m_baEcho7.at(3);
+        stcan.data[4]=c>>8;
+        stcan.data[5]=c;
+        stcan.data[6]=m_snDev;// 1:first 2:second
+        stcan.data[7]=0;
+    }
 
     ba1.clear();
     ba1.append((char*)(&stcan),sizeof(struct myst_can));
     emit sigCANsend(ba1,0);
 
+    setBAecho7();
+
 }
+void vwmain::slotCmdInc(int n)
+{
+    m_nCount12 +=n;
+}
+
 void vwmain::doEcho200()
 {
     bool flagRead=false;
@@ -271,8 +351,11 @@ void vwmain::doEcho200()
 
     if(flagRead){
         QFile file("/home/root/qt/cmd200");
+        QFile fbak("/home/root/qt/cmd200.bak");
         if(file.exists()){
-            file.remove();
+            fbak.remove();
+
+            file.rename(QString("/home/root/qt/cmd200.bak"));
         }
         QTimer::singleShot(2000,this,SLOT(slotReadFile200()));
 
@@ -353,6 +436,11 @@ bool vwmain::parseDT(myst_can *pCF)
     bool ret=m_parseDT.parse(pCF);
     return ret;
 }
+bool vwmain::parseIMG(myst_can *pCF)
+{
+    bool ret=m_parseIMG.parse(pCF);
+    return ret;
+}
 
 void vwmain::slotFrameParse()
 {
@@ -386,6 +474,7 @@ void vwmain::slotFrameParse()
         isValidQ7(&stcan);
         parseFile(&stcan);
         parseFile46(&stcan);
+        parseIMG(&stcan);
         m_nCountCF++;
         break;
     default:

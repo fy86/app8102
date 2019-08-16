@@ -29,7 +29,7 @@ public:
     char m_szFileName[32];
     virtual bool mkFile(QByteArray ba);
     virtual bool initFile(QByteArray ba);
-    int saveFile();
+    virtual int saveFile();
     bool isSH(char *pfilename);
     int runFile();
     virtual int appendBAfile(QByteArray ba);

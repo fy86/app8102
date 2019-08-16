@@ -15,7 +15,7 @@ public:
     explicit parserDT(QObject *parent = 0);
 
     int m_nSet;
-    QProcess m_process;
+    //QProcess m_process;
 
     void setDT(struct myst_can *pCF);
     void cmdDT(unsigned int dt32);

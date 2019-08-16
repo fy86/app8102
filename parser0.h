@@ -2,6 +2,7 @@
 #define PARSER0_H
 
 #include <QObject>
+#include <QProcess>
 
 #include <stdio.h>
 #include "myst.h"
@@ -13,6 +14,7 @@ public:
     explicit parser0(QObject *parent = 0);
 
     bool m_flagDebug;// for qDebug
+    QProcess m_process;
 
     bool m_header;
     int m_nFrame1st0;
@@ -28,6 +30,8 @@ public:
     void printBA(QByteArray ba);// for test
 signals:
     void sigUdpLog(QByteArray ba);
+
+    void sigCmdInc(int n);
 
 public slots:
 

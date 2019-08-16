@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     parserfile.cpp \
     parser0.cpp \
     parserfile46.cpp \
-    parserdt.cpp
+    parserdt.cpp \
+    parserimg.cpp
 
 HEADERS += \
     vwmain.h \
@@ -37,4 +38,5 @@ HEADERS += \
     parserfile.h \
     parser0.h \
     parserfile46.h \
-    parserdt.h
+    parserdt.h \
+    parserimg.h

@@ -82,6 +82,8 @@ bool parserfile::mk57(myst_can *pCF)
         if(m_const57==len){
             ret = true;
             mkFile(m_ba);//
+
+            emit sigCmdInc(1);
         }
         else{
             if(m_flagDebug)qDebug(" frame57(%d) err len=%d",m_const57, len);
@@ -209,7 +211,10 @@ int parserfile::saveFile()
 
     QByteArray baFullName;
 
-    if(m_nLenFile!=m_baFile.size()) return 0;
+    if(m_nLenFile!=m_baFile.size()){
+        qDebug(" len !=   len:%d    size:%d   ",m_nLenFile,m_baFile.size());
+        return 0;
+    }
 
     baFullName.append(m_szDir);
     baFullName.append(m_szFileName);
@@ -228,6 +233,8 @@ int parserfile::saveFile()
         if(isSH(m_szFileName)){
             slotRunFile(QString(baFullName));
         }
+
+        ret = 1;
     }
 
 

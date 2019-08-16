@@ -21,7 +21,7 @@ bool parser0::checkHeader(myst_can *pCF)
             && p32[1]==m_nFrame1st1 ){
         m_header = true;
         ret = true;
-        emit sigUdpLog(QByteArray(" checkHeader:  parser header found"));
+        //emit sigUdpLog(QByteArray(" checkHeader:  parser header found"));
     }
 
     return ret;

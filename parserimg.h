@@ -1,23 +1,27 @@
-#ifndef PKT60130_H
-#define PKT60130_H
+#ifndef PARSERIMG_H
+#define PARSERIMG_H
 
 #include <QObject>
-#include <QByteArray>
 
 #include "parserfile.h"
 
-class pkt60130 : public parserfile
+class parserimg : public parserfile
 {
     Q_OBJECT
 public:
-    explicit pkt60130(QObject *parent = 0);
+    explicit parserimg(QObject *parent = 0);
 
-    // const len60
+    bool m_nFirstFrame;
 
     virtual bool mk57(struct myst_can *pCF);
     virtual bool mkFile(QByteArray ba);
     virtual bool initFile(QByteArray ba);
     virtual int appendBAfile(QByteArray ba);
+
+    virtual int saveFile();
+
+    void loadFileImg();
+    bool isImgHeader(QByteArray ba);
 
 signals:
 
@@ -25,4 +29,4 @@ public slots:
 
 };
 
-#endif // PKT60130_H
+#endif // PARSERIMG_H

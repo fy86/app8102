@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     sthread.openCAN(pCAName);
     sthread.start();
 
-    qDebug("v0.13a 8.11");
+    qDebug("v0.14 8.15");
 
     vw.testSend();
 
@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
-
+// v0.14(8.15 done
+// v0.13b(8.14 add img
 // v0.13a(8.11 add udp.log   , setDT
 // v0.13 upload57,46  rm.start.cansend.test
 // v0.12 can.recv.id.mask 0x1f.ff.ff.ff

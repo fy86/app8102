@@ -54,7 +54,7 @@ void canrecvthread::run()
                 sprintf(buf," thread can recv .............. thread can recv  len:%d",frame.can_dlc);
                 ba.clear();
                 ba.append(buf);
-                emit sigUdpLog(ba);
+                //emit sigUdpLog(ba);
 
                 CANdata.len = frame.can_dlc;
                 CANdata.id32 = 0x1fffffff & frame.can_id;

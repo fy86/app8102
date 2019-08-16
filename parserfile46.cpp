@@ -53,6 +53,8 @@ bool parserfile46::mk57(myst_can *pCF)
         if(m_const57==len){
             ret = true;
             mkFile(m_ba);//
+
+            emit sigCmdInc(1);
         }
         else{
             if(m_flagDebug)qDebug(" frame57(%d) err len=%d",m_const57, len);

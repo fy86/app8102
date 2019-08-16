@@ -19,7 +19,7 @@ bool parserDT::parse(myst_can *pCF)
     ret = checkHeader(pCF);
     //
     if(ret){// header set
-        emit sigUdpLog(QByteArray(" datetime header set"));
+        //emit sigUdpLog(QByteArray(" datetime header set"));
         return ret;
     }
     else if(m_header){  // frame.data
